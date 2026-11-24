@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PainScope – Kiosk</title>
+<style>
+:root{--bg:#e9f1f4;--ink:#12323f;--mut:#5b7480;--teal:#0e7c86;--teald:#0a5d65;--tint:#e3f3f4;--line:#d3e2e7;--card:#fff;--red:#e5484d;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root{--bg:#0b161b}}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:var(--bg);font-family:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;color:var(--ink)}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:800px;background:#f7fbfc;border-radius:28px;overflow:hidden;transform-origin:center}
+header{position:absolute;inset:0 0 auto 0;height:84px;display:flex;align-items:center;padding:0 48px;gap:20px;background:#fff;border-bottom:1px solid var(--line);z-index:3}
+.logo{display:flex;align-items:center;gap:12px;font-weight:700;font-size:24px;color:var(--teald)}
+.cross{width:34px;height:34px;border-radius:9px;background:var(--teal);position:relative}
+.cross:before,.cross:after{content:"";position:absolute;background:#fff;border-radius:2px;left:50%;top:50%;transform:translate(-50%,-50%)}
+.cross:before{width:18px;height:5px}.cross:after{width:5px;height:18px}
+#dots{margin:0 auto;display:flex;gap:8px}#dots i{width:34px;height:6px;border-radius:3px;background:var(--line)}#dots i.on{background:var(--teal)}
+#chip{font-size:20px;color:var(--mut);min-width:150px;text-align:right}
+.scr{position:absolute;inset:84px 0 0 0;display:none;flex-direction:column;padding:36px 64px 40px}
+.scr.on{display:flex;animation:in .45s ease}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+h1{font-size:50px;font-weight:600;line-height:1.15;letter-spacing:-.5px}h2{font-size:42px;font-weight:600;line-height:1.2}
+.sub{font-size:24px;color:var(--mut);margin-top:12px}
+.row{display:flex;gap:24px}.grow{flex:1}.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.btn{height:76px;padding:0 48px;border-radius:38px;border:2px solid var(--teal);background:#fff;color:var(--teald);font-size:26px;font-weight:600;cursor:pointer;font-family:inherit}
+.btn.p{background:var(--teal);color:#fff}.btn:disabled{opacity:.35;pointer-events:none}.btn:active{transform:scale(.97)}
+.field{flex:1;height:92px;border-radius:20px;border:2px solid var(--line);background:#fff;font-size:36px;padding:0 28px;font-family:inherit;color:var(--ink)}
+.field:focus{outline:none;border-color:var(--teal)}
+.mic{width:92px;height:92px;border-radius:50%;border:2px solid var(--teal);background:var(--tint);cursor:pointer;display:grid;place-items:center}
+.mic.live{background:var(--teal)}.mic.live svg{stroke:#fff}
+.mic svg{width:38px;height:38px;stroke:var(--teal);fill:none;stroke-width:2;stroke-linecap:round}
+.grid{display:grid;gap:18px;margin-top:28px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+.opt{min-height:86px;border:2px solid var(--line);border-radius:20px;background:#fff;font-size:26px;font-family:inherit;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:16px;padding:0 24px;text-align:left}
+.opt:before{content:"";width:26px;height:26px;border-radius:8px;border:2px solid var(--line);flex:none}
+.opt.on{background:var(--tint);border-color:var(--teal)}.opt.on:before{background:var(--teal);border-color:var(--teal);box-shadow:inset 0 0 0 5px var(--tint)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px}
+.panel h3{font-size:20px;text-transform:uppercase;letter-spacing:1.5px;color:var(--teal);margin-bottom:10px}.panel p{font-size:24px;line-height:1.4}
+.bodybox{flex:1;background:#fff;border:1px solid var(--line);border-radius:28px;display:grid;place-items:center;position:relative;overflow:hidden;transition:transform .25s}
+.bodybox svg{width:100%;height:100%}
+.bd *{fill:#d8ecee;stroke:#7bb6bb;stroke-width:2;transition:fill .2s}
+.r{cursor:pointer}.r:hover *{fill:#b5dde0}.r.sel *{fill:var(--teal);stroke:var(--teald)}
+.lbl{position:absolute;bottom:22px;left:0;right:0;text-align:center;font-size:22px;color:var(--mut)}
+#mk{fill:var(--red);stroke:#fff;stroke-width:2;animation:pl 1.4s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pl{50%{transform:scale(1.35);opacity:.75}}
+.orb{position:absolute;right:48px;bottom:40px;width:76px;height:76px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#7fe0e6,var(--teal));box-shadow:0 0 0 0 rgba(14,124,134,.5);animation:orb 2.4s infinite;cursor:pointer;z-index:4;border:0}
+@keyframes orb{70%{box-shadow:0 0 0 22px rgba(14,124,134,0)}}
+#bub{position:absolute;right:140px;bottom:58px;max-width:420px;background:#fff;border:1px solid var(--line);border-radius:20px 20px 4px 20px;padding:18px 22px;font-size:22px;line-height:1.35;display:none;z-index:4;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+#stage[data-s=welcome] .orb,#stage[data-s=story] .orb,#stage[data-s=plan] .orb{display:none}
+.center{margin:auto;text-align:center;max-width:900px}.center .btn{margin-top:48px}
+.ring{width:150px;height:150px;border-radius:50%;margin:0 auto 36px;display:grid;place-items:center;background:var(--tint);animation:orb 2.4s infinite}
+.ring svg{width:80px;stroke:var(--teal);fill:none;stroke-width:2.2;stroke-linecap:round}
+.load{width:340px;height:8px;background:var(--line);border-radius:4px;margin:36px auto 0;overflow:hidden}.load i{display:block;height:100%;width:0;background:var(--teal);animation:ld 2.6s linear forwards}
+@keyframes ld{to{width:100%}}
+.step{flex:1;background:#fff;border:1px solid var(--line);border-radius:28px;padding:36px;display:flex;flex-direction:column;gap:14px}
+.step b{width:56px;height:56px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-size:28px}
+.step h3{font-size:30px}.step p{font-size:22px;color:var(--mut);line-height:1.4}
+.step .ill{height:230px;border-radius:18px;background:#0b2230;display:grid;place-items:center;margin-top:auto}
+/* story */
+#story{position:absolute;inset:0;background:#06141c;z-index:6;display:none}
+#stage[data-s=story] #story{display:block}#stage[data-s=story] header{display:none}
+#story .fig{position:absolute;left:60px;top:40px;bottom:40px;width:520px;border-radius:30px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#12384a,#06141c 75%);border:1px solid #1d4a5e}
+#story svg{width:100%;height:100%}
+#cam{transition:transform 2.2s cubic-bezier(.5,0,.2,1);transform-origin:0 0}
+.xr{fill:none;stroke:#8fd3e6;stroke-width:2.5;opacity:.75;stroke-linecap:round}
+.vb{fill:#8fd3e6;opacity:.65;transition:fill .6s,opacity .6s}
+.skin{fill:rgba(143,211,230,.05);stroke:#8fd3e6;stroke-opacity:.35;stroke-width:1.5}
+#brain{fill:rgba(143,211,230,.15);stroke:#8fd3e6;stroke-width:2;transition:all .8s}
+[data-sc="3"] .vb{fill:#ffd27a;opacity:1}
+[data-sc="4"] #brain,[data-sc="5"] #brain{fill:rgba(255,200,100,.55);stroke:#ffd27a;filter:drop-shadow(0 0 10px #ffb84d)}
+#nerve{fill:none;stroke:#ffd27a;stroke-width:3;stroke-linecap:round;opacity:.9}#sig{fill:#fff;filter:drop-shadow(0 0 8px #ffd27a)}
+#pp{fill:var(--red);filter:drop-shadow(0 0 8px var(--red));animation:pl 1.2s infinite;transform-box:fill-box;transform-origin:center}
+[data-sc="5"] #pp,[data-sc="6"] #pp{fill:#5fd0c2;filter:drop-shadow(0 0 8px #5fd0c2);animation-duration:3s}
+.wm{fill:#ffd27a;opacity:0;transition:opacity .8s}[data-sc="1"] .wm,[data-sc="2"] .wm{opacity:1;animation:tw 1s infinite alternate}
+@keyframes tw{to{opacity:.25}}
+.tg{font-size:11px;fill:#cfeff7;opacity:0;transition:opacity .8s}
+[data-sc="0"] #t1,[data-sc="1"] #t1,[data-sc="2"] #t2,[data-sc="3"] #t3,[data-sc="4"] #t4{opacity:1}
+#cap{position:absolute;left:660px;right:70px;top:50%;transform:translateY(-50%)}
+#cap .who{font-size:18px;letter-spacing:3px;text-transform:uppercase;color:#7fd0d8;margin-bottom:26px;display:flex;align-items:center;gap:14px}
+#cap .who i{width:12px;height:12px;border-radius:50%;background:#7fd0d8;animation:pl 1.4s infinite}
+#txt{font-family:Georgia,"Times New Roman",serif;font-size:38px;line-height:1.5;color:#f0f8fa;min-height:360px}
+#ctl{position:absolute;right:60px;top:44px;display:flex;gap:12px;z-index:2}
+#ctl button{height:52px;padding:0 22px;border-radius:26px;border:1px solid #2a5a70;background:rgba(10,40,55,.7);color:#cfeff7;font-size:18px;font-family:inherit;cursor:pointer}
+#pg{position:absolute;left:660px;right:70px;bottom:50px;display:flex;gap:8px}#pg i{flex:1;height:5px;border-radius:3px;background:#1d4a5e;overflow:hidden}#pg i b{display:block;height:100%;width:0;background:#7fd0d8}
+#end{position:absolute;left:660px;right:70px;bottom:90px;display:none;gap:16px}
+.note{position:absolute;left:660px;right:70px;bottom:18px;font-size:15px;color:#6f98a8}
+#ask{position:absolute;left:640px;right:50px;top:100px;bottom:50px;background:#0b2230;border:1px solid #2a5a70;border-radius:24px;padding:26px;display:none;z-index:7;overflow:auto;color:#f0f8fa}#ask h3{font-size:25px;margin-bottom:14px;font-weight:600}#qc{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}#ask button{border:1px solid #2a5a70;background:#10303f;color:#cfeff7;border-radius:22px;padding:10px 18px;font-size:17px;font-family:inherit;cursor:pointer}#ask input{height:56px;border-radius:16px;border:1px solid #2a5a70;background:#06141c;color:#fff;font-size:20px;padding:0 18px}#aa{margin-top:16px}#aa p{font-size:21px;line-height:1.45;margin-bottom:12px}.fb{display:flex;gap:10px;margin:8px 0;flex-wrap:wrap}.bg{display:inline-block;padding:6px 14px;border-radius:14px;font-size:16px;margin-bottom:10px}.bg.ok{background:#12452f;color:#8ff0b5}.bg.mid{background:#4a3b0f;color:#ffd27a}.bg.no{background:#4a1b1f;color:#ff9a9f}
+</style></head><body>
+<div id="stage" data-s="welcome">
+<header><div class="logo"><div class="cross"></div>PainScope</div><div id="dots"></div><div id="chip"></div></header>
+
+<section class="scr on" id="welcome"><div class="center">
+<div class="ring"><svg viewBox="0 0 48 48"><path d="M24 8c-6 0-11 4-11 10 0 3 1 5 3 7-2 2-3 5-1 8 2 4 6 5 9 4 3 1 7 0 9-4 2-3 1-6-1-8 2-2 3-4 3-7 0-6-5-10-11-10z"/><path d="M24 10v28"/></svg></div>
+<h1>Hello there,<br>want to know how your brain interprets pain?</h1>
+<p class="sub">A short, friendly journey inside your body. No medical knowledge needed.</p>
+<button class="btn p" onclick="go('region')">Get started</button></div></section>
+
+<section class="scr" id="region"><h2>Choose the region where pain is occurring</h2><p class="sub">Tap the body to select the area.</p>
+<div class="row grow" style="margin-top:20px;min-height:0"><div class="bodybox" id="bb1"></div>
+<div style="width:380px;display:flex;flex-direction:column;gap:20px"><div class="panel grow"><h3 id="ri-t">Information</h3><p id="ri-p">Start with the basic body parts. Tap any area and it lights up.</p></div>
+<button class="btn p" id="rc" disabled onclick="go('name')">Continue</button></div></div></section>
+
+<section class="scr" id="name"><h1 style="margin-top:60px">Let’s first get started with your name?</h1><p class="sub">Type it, or tap the microphone and say it.</p>
+<div class="row" style="margin-top:60px"><input class="field" id="in-name" placeholder="Enter your name" autocomplete="off"><button class="mic" data-for="in-name"></button></div>
+<div class="foot"><button class="btn" onclick="go('region')">Back</button><button class="btn p" onclick="S.name=v('in-name').trim();if(!S.name)return;chipUp();go('age')">Continue</button></div></section>
+
+<section class="scr" id="age"><h1 style="margin-top:60px">How old are you<span class="nm">?</span></h1><p class="sub">This helps me tune the explanation for you.</p>
+<div class="row" style="margin-top:60px"><input class="field" id="in-age" inputmode="numeric" placeholder="Enter your age" autocomplete="off"><button class="mic" data-for="in-age"></button></div>
+<div class="foot"><button class="btn" onclick="go('name')">Back</button><button class="btn p" onclick="S.age=v('in-age').trim();if(!S.age)return;chipUp();go('hist')">Continue</button></div></section>
+
+<section class="scr" id="hist"><h1>Do you have any medical history?</h1><p class="sub">Select all that apply. You can skip anything you’d rather not share.</p><p style="font-size:20px;color:var(--teal);margin-top:10px">🔒 Your answers stay on this kiosk only and are erased when you finish.</p>
+<div class="grid g3" id="hist-g"></div>
+<div class="foot"><button class="btn" onclick="go('age')">Back</button><button class="btn p" onclick="go('confirm')">Continue</button></div></section>
+
+<section class="scr" id="confirm"><div class="center"><div class="ring"><svg viewBox="0 0 48 48"><path d="M12 25l8 8 16-18"/></svg></div>
+<h1 id="cf-t"></h1><div class="row" style="justify-content:center;margin-top:48px"><button class="btn" onclick="go('hist')">Back</button><button class="btn p" onclick="go('mark')">Continue</button></div></div></section>
+
+<section class="scr" id="mark"><h2 id="mk-t">Please mark the exact region</h2><p class="sub">Tap to select. Tap the red dot again to unselect.</p>
+<div class="row grow" style="margin-top:20px;min-height:0"><div class="panel" style="width:260px"><h3>Your details</h3><p id="ud"></p></div>
+<div class="bodybox" id="bb2"><div class="lbl" id="vl">Front view</div></div>
+<div style="width:230px;display:flex;flex-direction:column;gap:18px;justify-content:flex-end"><button class="btn" onclick="rot()">⟳ 360° rotate</button><button class="btn p" id="mc" disabled onclick="go('sens')">Continue</button></div></div></section>
+
+<section class="scr" id="sens"><h1 id="sn-t">Describe your sensation</h1><p class="sub">Choose all that feel right.</p>
+<div class="grid g3" id="sn-g"></div>
+<div class="foot"><button class="btn" onclick="go('mark')">Back</button><button class="btn p" id="sc" disabled onclick="go('freq')">Continue</button></div></section>
+
+<section class="scr" id="freq"><h1 id="fq-t">How often is it happening to you?</h1>
+<div class="grid g2" id="fq-g"></div>
+<div class="foot"><button class="btn" onclick="go('sens')">Back</button><button class="btn p" id="fc" disabled onclick="go('safe')">Continue</button></div></section>
+
+<section class="scr" id="safe"><h1>One quick safety check</h1><p class="sub">Are you having any of these right now? I ask everyone, to keep you safe.</p><div class="grid g2" id="sf-g"></div><div class="foot"><button class="btn" onclick="go('freq')">Back</button><button class="btn p" onclick="go(FL.length?'alert':'plan')">Continue</button></div></section>
+<section class="scr" id="alert"><div class="center"><div class="ring" style="background:#fdeaea;animation:none"><svg viewBox="0 0 48 48" style="stroke:#e5484d"><path d="M24 12v14M24 34v1"/></svg></div><h1>Please see a doctor right away</h1><p class="sub" style="font-size:28px">What you selected can sometimes need quick medical attention. Please tell the clinic staff now, or call 112. The story can wait, and I will be here after.</p><div class="row" style="justify-content:center;margin-top:48px"><button class="btn" onclick="go('safe')">Back</button><button class="btn p" onclick="go('plan')">I’m safe, continue the story</button></div></div></section>
+<section class="scr" id="plan"><div class="center"><div class="ring"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="14"/><path d="M24 15v9l6 4"/></svg></div>
+<h1>Okay, I got everything.<br>Let me plan it out for you.</h1><div class="load"><i></i></div></div></section>
+
+<section class="scr" id="flow"><h2>Your journey flow</h2><p class="sub">Three short chapters, told in everyday words.</p>
+<div class="row grow" style="margin-top:28px;min-height:0">
+<div class="step"><b>1</b><h3>Your body</h3><p>We start where you feel it.</p><div class="ill"><svg viewBox="0 0 100 110" width="110"><circle cx="50" cy="14" r="9" class="xr"/><path class="xr" d="M50 24v40M30 32h40M50 64l-12 36M50 64l12 36"/><circle cx="43" cy="88" r="5" fill="#e5484d"/></svg></div></div>
+<div class="step"><b>2</b><h3>X-ray vision</h3><p>We peek at bones, nerves and the pain point.</p><div class="ill"><svg viewBox="0 0 100 110" width="110"><path class="xr" d="M50 10v90M38 24q12-8 24 0M36 40q14-8 28 0M36 56q14-8 28 0M42 72l-4 30M58 72l4 30"/><circle cx="50" cy="60" r="5" fill="#ffd27a"/></svg></div></div>
+<div class="step"><b>3</b><h3>The story</h3><p>A signal travels to the brain, with narration.</p><div class="ill"><svg viewBox="0 0 100 110" width="110"><path class="xr" d="M30 100l20-40V28"/><ellipse cx="50" cy="16" rx="16" ry="11" class="xr"/><circle cx="50" cy="44" r="4" fill="#ffd27a"/></svg></div></div></div>
+<div class="foot"><button class="btn" onclick="go('freq')">Back</button><button class="btn p" onclick="startStory()">▶ Begin the story</button></div></section>
+
+<div id="story"><div id="ctl"><button onclick="openAsk()">💬 Ask grandma</button><button onclick="pauseT()" id="pb">❚❚ Pause</button><button onclick="startStory()">↺ Replay</button><button onclick="muteT()" id="mb">Sound on</button></div>
+<div class="fig"><svg viewBox="0 0 300 700" id="fsvg" data-sc="0"><g id="cam"></g></svg></div>
+<div id="cap"><div class="who"><i></i>Grandma’s story · general science, not a diagnosis</div><p id="txt"></p></div>
+<div id="end"><button class="btn p" onclick="startStory()">↺ Hear it again</button><button class="btn" style="background:transparent;color:#cfeff7;border-color:#2a5a70" onclick="resetAll()">Finish</button></div>
+<div id="ask"><h3>Ask grandma anything about this story</h3><div id="qc"></div><div class="row" style="gap:10px"><input id="aq" style="flex:1" placeholder="Type your question…" onkeydown="if(event.key=='Enter')ask()"><button onclick="ask()" style="height:56px">Ask</button></div><div id="aa"></div><button onclick="closeAsk()" style="margin-top:8px">← Back to the story</button></div><div id="pg"></div><div class="note">A learning story, not a diagnosis. Please speak with a clinician about ongoing pain.</div></div>
+
+<button class="orb" aria-label="AI assistant" onclick="hint()"></button><div id="bub"></div>
+</div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],v=i=>$('#'+i).value;
+const S={name:'',age:'',hist:[],region:'',pt:null,back:false,sens:[],freq:''};
+const order=['region','name','age','hist','confirm','mark','sens','freq','safe','plan','flow'];let FL=[];
+const R=(x,y,w,h,r)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}"/>`,C=(x,y,r)=>`<circle cx="${x}" cy="${y}" r="${r}"/>`;
+const REG={Head:[C(150,50,30)+R(138,76,24,26,8),'55 -10 190 230','The head holds the brain, the place where every pain feeling is finally created.'],
+Chest:[R(95,100,110,130,30),'20 80 260 250','Chest, shoulders and upper back. Many nerves branch out from the spine here.'],
+Abdomen:[R(100,225,100,105,26),'30 210 240 230','Stomach and lower back area, full of muscles, organs and nerve pathways.'],
+'Arms & Hands':[R(52,108,40,120,20)+R(208,108,40,120,20)+R(46,228,36,90,18)+R(218,228,36,90,18)+C(62,330,16)+C(238,330,16),'0 90 300 270','Arms and hands have some of the most sensitive nerve endings in the body.'],
+Hips:[R(98,325,104,70,28),'30 320 240 230','Hips connect the spine to the legs. Big nerves pass through here.'],
+Legs:[R(104,388,44,150,20)+R(152,388,44,150,20)+R(108,534,36,130,16)+R(156,534,36,130,16),'40 380 220 340','Thighs, knees and calves. A long nerve highway runs from the spine down each leg.'],
+Feet:[R(100,664,48,24,12)+R(152,664,48,24,12),'40 600 220 130','Feet carry your weight and send constant messages up to the brain.']};
+const body=sel=>'<g class="bd">'+Object.entries(REG).map(([n,a])=>`<g class="${sel?'r':''}" data-r="${n}">${a[0]}</g>`).join('')+'</g>';
+$('#bb1').innerHTML=`<svg viewBox="0 0 300 700">${body(1)}</svg>`;
+$('#bb1').onclick=e=>{const g=e.target.closest('.r');if(!g)return;$$('.r').forEach(x=>x.classList.remove('sel'));g.classList.add('sel');S.region=g.dataset.r;S.pt=null;$('#ri-t').textContent=S.region;$('#ri-p').textContent=REG[S.region][2];$('#rc').disabled=false;chipUp()};
+['Diabetes','High blood pressure','Arthritis','Previous injury','Surgery','Migraine','Anxiety or stress','Poor sleep','None / prefer not to say'].forEach(t=>{const b=document.createElement('button');b.className='opt';b.textContent=t;b.onclick=()=>{if(t[0]=='N'){S.hist=[];$$('#hist-g .opt').forEach(x=>x.classList.remove('on'))}else $$('#hist-g .opt')[8].classList.remove('on');b.classList.toggle('on');S.hist=$$('#hist-g .on').map(x=>x.textContent)};$('#hist-g').append(b)});
+function chips(id,list,multi,cb){list.forEach(t=>{const b=document.createElement('button');b.className='opt';b.textContent=t;b.onclick=()=>{if(!multi)$$('#'+id+' .on').forEach(x=>x.classList.remove('on'));b.classList.toggle('on');cb($$('#'+id+' .on').map(x=>x.textContent))};$('#'+id).append(b)})}
+chips('sn-g',['Burning','Aching','Tingling','Sharp','Throbbing','Numb'],1,a=>{S.sens=a;$('#sc').disabled=!a.length});
+chips('fq-g',['Recently','Every week','Every month','Rarely'],0,a=>{S.freq=a[0]||'';$('#fc').disabled=!a.length});
+function chipUp(){$('#chip').textContent=S.name?(S.name+(S.age?', '+S.age:'')):''}
+// mark step
+function drawMark(){const vb=REG[S.region][1];$('#bb2').querySelectorAll('svg').forEach(x=>x.remove());const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox',vb);
+s.innerHTML=`<g id="zg" transform="${S.back?'translate(300 0) scale(-1 1)':''}">${body(0)}${S.pt?`<circle id="mk" cx="${S.pt.x}" cy="${S.pt.y}" r="9"/>`:''}</g>`;
+s.onclick=e=>{if(e.target.id=='mk'){S.pt=null}else if(e.target.closest('.bd')){const g=$('#zg'),p=s.createSVGPoint();p.x=e.clientX;p.y=e.clientY;const q=p.matrixTransform(g.getScreenCTM().inverse());S.pt={x:Math.round(q.x),y:Math.round(q.y)}}else return;drawMark();$('#mc').disabled=!S.pt};
+$('#bb2').prepend(s)}
+function rot(){const b=$('#bb2');b.style.transform='scaleX(0)';setTimeout(()=>{S.back=!S.back;$('#vl').textContent=S.back?'Back view':'Front view';drawMark();b.style.transform=''},250)}
+// hints
+const H={region:'Tap the part of the body where it hurts. I will zoom in for you.',name:'You can type, or tap the mic and just say your name.',age:'Just a number is fine.',hist:'Choose anything that applies. It helps me explain things better.',confirm:'Does this look right?',mark:'Tap to drop a red dot exactly where it hurts. Use rotate to see the back.',sens:'There are no wrong answers. Pick every word that fits.',freq:'This tells me how “loud” your body’s alarm has been.',flow:'Ready when you are. Sit back and listen.'};
+function hint(){const b=$('#bub');b.textContent=H[stage.dataset.s]||'I’m here if you need me.';b.style.display='block';clearTimeout(hint.t);hint.t=setTimeout(()=>b.style.display='none',4500);speak(b.textContent,true)}
+// voice input
+$$('.mic').forEach(m=>{m.innerHTML='<svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg>';m.onclick=()=>{const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){alert('Voice input is not available in this browser. Please type.');return}const r=new SR();m.classList.add('live');r.onresult=e=>{$('#'+m.dataset.for).value=e.results[0][0].transcript.replace(/\.$/,'')};r.onend=()=>m.classList.remove('live');r.start()}});
+// nav
+const stage=$('#stage');
+$('#dots').innerHTML=order.map(()=>'<i></i>').join('');
+function go(id){$$('.scr').forEach(e=>e.classList.toggle('on',e.id==id));stage.dataset.s=id;$('#bub').style.display='none';
+$$('#dots i').forEach((d,i)=>d.classList.toggle('on',i<=order.indexOf(id)));$('#dots').style.visibility=id=='welcome'?'hidden':'visible';
+const nm=S.name||'';
+if(id=='age')$('#age .nm').textContent=nm?' '+nm+'?':'?';
+if(id=='confirm')$('#cf-t').innerHTML=`Okay, I got everything${nm?', '+nm:''}.<br>Shall we get started with your ${S.region.toLowerCase()} pain?`;
+if(id=='mark'){$('#ud').innerHTML=`<b>${nm}</b><br>Age ${S.age}<br><br><span style="color:var(--mut)">Region</span><br>${S.region}`;$('#vl').textContent='Front view';S.back=false;$('#mc').disabled=!S.pt;drawMark()}
+if(id=='sens')$('#sn-t').textContent=`Describe your sensation${nm?', '+nm:''}`;
+if(id=='plan'){const l=$('#plan .load');l.innerHTML='<i></i>';setTimeout(()=>stage.dataset.s=='plan'&&go('flow'),2800)}}
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/800);stage.style.transform=`translate(-50%,-50%) scale(${s})`}addEventListener('resize',fit);fit();go('welcome');
+// ---- story ----
+const X=(f)=>Math.round(f);
+function xray(){const sp=[...Array(14)].map((_,i)=>`<rect class="vb" x="142" y="${108+i*17}" width="16" height="11" rx="4"/>`).join('');
+const rb=[0,1,2,3,4,5].map(i=>{const y=116+i*17;return `<path class="xr" d="M150 ${y}Q${108-i*3} ${y-6} 98 ${y+30}M150 ${y}Q${192+i*3} ${y-6} 202 ${y+30}"/>`}).join('');
+return `<g class="skin"><circle cx="150" cy="50" r="30"/><rect x="95" y="100" width="110" height="230" rx="30"/><rect x="52" y="108" width="40" height="120" rx="20"/><rect x="208" y="108" width="40" height="120" rx="20"/><rect x="46" y="228" width="36" height="90" rx="18"/><rect x="218" y="228" width="36" height="90" rx="18"/><rect x="98" y="325" width="104" height="70" rx="28"/><rect x="104" y="388" width="44" height="150" rx="20"/><rect x="152" y="388" width="44" height="150" rx="20"/><rect x="108" y="534" width="36" height="130" rx="16"/><rect x="156" y="534" width="36" height="130" rx="16"/></g>
+<path id="brain" d="M128 48q-4-22 22-24q26 2 22 24q4 14-22 18q-26-4-22-18z"/><path class="xr" d="M150 26v38"/>${sp}${rb}<path class="xr" d="M112 106L188 106M72 116l-4 100M66 228l-4 80M228 116l4 100M234 228l4 80"/>
+<path class="xr" d="M108 340Q150 356 192 340L188 382Q150 368 112 382Z"/><path class="xr" stroke-width="9" d="M126 396l1 130M174 396l-1 130"/><circle class="xr" cx="126" cy="536" r="9"/><circle class="xr" cx="174" cy="536" r="9"/><path class="xr" stroke-width="7" d="M126 548l1 112M174 548l-1 112"/><path class="xr" d="M137 552l0 104M163 552l0 104M110 668q16-8 32 0M158 668q16-8 32 0"/>`}
+let T={sc:-1,t:0,paused:false,mute:false,sc_:[],raf:0,len:1,last:0};
+function scenes(){const n=S.name||'dear',rg=S.region.toLowerCase(),sn=(S.sens[0]||'aching').toLowerCase(),fq=S.freq?S.freq.toLowerCase():'now and then',p=S.pt||{x:126,y:540};
+const hx=S.hist.some(h=>/Anxiety|sleep/.test(h))?`You told me your sleep or stress has been troubling you, and those make the brain extra careful, you know. `:'';const nv=S.freq=='Rarely'?'a quiet little thing':'a busy little thing';
+return[
+{x:`Arre, come sit close, ${n} beta. Let me tell you a secret about that ${rg} of yours. Pain isn’t only in the place where you feel it. Pain is a story your brain tells you, and today I’ll show you how it is told.`,p:[0,0],f:[p.x,p.y,2.4]},
+{x:`Deep inside, right there, live tiny little watchmen. Doctors call them nociceptors, but I call them watchmen. They never sleep. Whenever something might hurt you, they notice, and they get ready to send word.`,p:[0,0],f:[p.x,p.y,3.2]},
+{x:`So the watchmen pass a message along a long wire called a nerve, like a runner carrying a lantern. That is why you feel it as ${sn}. Different watchmen carry different messages, and your body turns them into different feelings.`,p:[0,.5],f:[150,380,1.5]},
+{x:`The message reaches your spinal cord, the busiest train station in your body. Here, the station master decides how many messages go up to the brain, and how loud they should be. Some days he turns the volume up, some days down.`,p:[.5,.82],f:[150,230,2.2]},
+{x:`At last, it reaches the brain. Now your brain looks at everything, not just the message: how you slept, how worried you feel, what you remember, even what you expect. ${hx}Then it decides, “Should I ring the alarm?”`,p:[.82,1],f:[150,55,3.4]},
+{x:`And that, ${n} beta, is pain, na. A ${sn} feeling made by your brain to protect you. It is real, but it is an alarm, not always a measure of damage. If it has been coming back ${fq}, your alarm may have become ${nv==='a quiet little thing'?'a little jumpy':'extra sensitive'}, and can ring even when nothing is injured.`,p:[1,1],f:[150,350,1]},
+{x:`The good news is that alarms can be calmed. Gentle movement, good rest, kind thoughts and the guidance of your doctor all help turn the volume down. Be patient with your body, ${n}. It has been trying to protect you all along. The end.`,p:[1,1],f:[p.x,p.y,1.8]}]}
+function startStory(){go('story');$('#ask').style.display='none';const p=S.pt||{x:126,y:540};let pts=[[p.x,p.y]];if(p.y>400)pts.push([p.x,420],[150,392]);else pts.push([150,p.y]);pts.push([150,200],[150,72]);
+const d='M'+pts.map(a=>a.join(' ')).join('L');
+const dots=[...Array(7)].map((_,i)=>{const a=i*0.9,r=18+(i%3)*8;return `<circle class="wm" cx="${p.x+Math.cos(a)*r}" cy="${p.y+Math.sin(a)*r}" r="3" style="animation-delay:${i*.15}s"/>`}).join('');
+$('#cam').innerHTML=xray()+`<path id="nerve" d="${d}"/>${dots}<circle id="sig" r="6"/><circle id="pp" cx="${p.x}" cy="${p.y}" r="9"/><text class="tg" id="t1" x="${p.x+(p.x<150?-70:16)}" y="${p.y-14}">Pain point</text><text class="tg" id="t2" x="${p.x<150?p.x-62:p.x+14}" y="${p.y>400?p.y-60:p.y+30}">Nerve</text><text class="tg" id="t3" x="164" y="230">Spinal cord</text><text class="tg" id="t4" x="184" y="52">Brain</text>`;
+T.sc_=scenes();T.sc=-1;T.paused=false;$('#pb').textContent='❚❚ Pause';$('#end').style.display='none';
+$('#pg').innerHTML=T.sc_.map(()=>'<i><b></b></i>').join('');
+const n=$('#nerve');T.len=n.getTotalLength();n.style.strokeDasharray=T.len;n.style.strokeDashoffset=T.len;
+cancelAnimationFrame(T.raf);T.last=performance.now();nextSc();T.raf=requestAnimationFrame(tick)}
+function nextSc(){T.sc++;T.t=0;speechSynthesis&&speechSynthesis.cancel();if(T.sc>=T.sc_.length){T.sc=T.sc_.length-1;T.done=true;$('#end').style.display='flex';return}T.done=false;const s=T.sc_[T.sc];
+$('#fsvg').dataset.sc=T.sc;const c=$('#cam');c.style.transform=`translate(150px,350px) scale(${s.f[2]}) translate(${-s.f[0]}px,${-s.f[1]}px)`;
+$$('#pg i b').forEach((b,i)=>b.style.width=i<T.sc?'100%':'0');speak(s.x)}
+function tick(now){const dt=now-T.last;T.last=now;if(!T.paused&&!T.done){T.t+=dt;const s=T.sc_[T.sc],L=s.x.length,ty=L*38;$('#txt').textContent=s.x.slice(0,Math.min(L,Math.floor(T.t/38)));
+$$('#pg i b')[T.sc].style.width=Math.min(100,T.t/(ty+2800)*100)+'%';
+const k=Math.min(1,T.t/3500),pr=s.p[0]+(s.p[1]-s.p[0])*k,n=$('#nerve');n.style.strokeDashoffset=T.len*(1-pr);
+const pt=n.getPointAtLength(T.len*pr);$('#sig').setAttribute('cx',pt.x);$('#sig').setAttribute('cy',pt.y);$('#sig').style.opacity=pr>0&&pr<1?1:0;
+if(T.t>ty+2800&&T.sc<T.sc_.length)nextSc()}
+T.raf=requestAnimationFrame(tick)}
+function speak(t,force){if(!window.speechSynthesis||(T.mute&&!force))return;const u=new SpeechSynthesisUtterance(t);u.lang='en-IN';u.rate=.78;u.pitch=.95;const vs=speechSynthesis.getVoices(),F=/female|veena|heera|neerja|swara|lekha|priya|kalpana|aditi/i,f=vs.find(x=>/en[-_]IN/i.test(x.lang)&&F.test(x.name))||vs.find(x=>/en[-_]IN/i.test(x.lang))||vs.find(x=>/hi[-_]IN/i.test(x.lang)&&F.test(x.name))||vs.find(x=>/en/i.test(x.lang)&&F.test(x.name));if(f){u.voice=f;u.lang=f.lang}speechSynthesis.speak(u)}
+function pauseT(){T.paused=!T.paused;$('#pb').textContent=T.paused?'▶ Resume':'❚❚ Pause';window.speechSynthesis&&(T.paused?speechSynthesis.pause():speechSynthesis.resume())}
+function muteT(){T.mute=!T.mute;$('#mb').textContent=T.mute?'Sound off':'Sound on';if(T.mute&&window.speechSynthesis)speechSynthesis.cancel()}
+chips('sf-g',['Sudden, severe pain','Weakness or numbness that is spreading','Chest pain or trouble breathing','Fever along with the pain','None of these'],1,a=>{FL=a.filter(x=>x[0]!='N')});
+const Q=['Why does it happen?','Explain it simpler','Give me more detail','Why pain without an injury?','Which tablet should I take?','Do I have a slipped disc?'];
+const STG=['The red dot is where your brain says “it is here”. The feeling is built in the brain, then placed on that spot.','Watchmen are tiny nerve endings. They react to heat, pressure or chemicals that could harm tissue.','The nerve is a wire carrying the watchmen’s message towards the spine.','The spinal cord sorts the messages and can turn them up or down before they reach the brain.','The brain blends the message with sleep, mood, memory and context before deciding on pain.','Pain is the brain’s protective alarm. It can be real even without damage, especially if the alarm is sensitive.','Calming the alarm usually needs rest, gentle movement and your doctor’s guidance.'];
+function openAsk(){if(!T.paused)pauseT();$('#ask').style.display='block';$('#aa').innerHTML='';if(!$('#qc').children.length)Q.forEach(t=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>ask(t);$('#qc').append(b)})}
+function closeAsk(){$('#ask').style.display='none';if(T.paused)pauseT()}
+function ask(q){q=(q||v('aq')).trim();if(!q)return;$('#aq').value='';const t=q.toLowerCase(),n=S.name||'beta';let a,c='ok',l='Confident · general science';
+if(/chest|breath|faint|can.?t move|suicid|hurt myself/.test(t)){a=`That sounds important, ${n}. Please tell the clinic staff right now, or call 112. Do not wait for the story.`;c='no';l='Urgent · please get help now'}
+else if(/tablet|medicine|medication|dose|pill|paracetamol|ibuprofen|injection|surgery/.test(t)){a='Medicines and doses must come from your doctor or pharmacist, because the right choice depends on your health and your other tablets. I can explain how pain works, but I should not advise on medicine.';c='no';l='Can’t answer · ask your doctor'}
+else if(/do i have|diagnos|what.?s wrong|slip|cancer|serious|fracture|tumou?r|sciatica|disc/.test(t)){a=`I know you want an answer, ${n}. But I cannot diagnose, because I cannot see inside your body. This story explains how pain works in general. A doctor or physiotherapist can examine you and tell you what is going on.`;c='no';l='Can’t answer · needs a clinician'}
+else if(/simpl|easy|confus/.test(t)){a='Think of a doorbell. The watchmen press the bell, the nerve is the wire, and your brain decides whether to open the door. That is all, beta.'}
+else if(/detail|more|deeper|scien|technical/.test(t)){a='Nociceptors (A-delta and C fibres) fire in the tissue. The signal reaches the dorsal horn of the spinal cord, where it can be amplified or dampened. It then travels to the thalamus and many brain areas, which together produce the experience of pain.'}
+else if(/without|no injury|nothing wrong|not hurt|even when/.test(t)){a='After repeated pain, nerves and the spinal cord can become more sensitive, so the alarm rings with a smaller push. Researchers see this in many people with long-lasting pain. Whether it applies to you, only your doctor can say.';c='mid';l='Generally true · may not fit you'}
+else if(/why|how|nerve|spine|spinal|brain|alarm|signal|watch|happen/.test(t)){a=STG[T.sc>=0?T.sc:0]}
+else{a='Hmm, I am not sure I understood that, and I do not want to guess and tell you something wrong. I can explain the nerve, the spine, the brain or the alarm. Try one of the suggestions, or ask your doctor.';c='mid';l='Not sure · rephrase please'}
+$('#aa').innerHTML=`<div class="bg ${c}">${l}</div><p>${a}</p>`+(c=='no'?'':`<div class="fb"><button onclick="fb(1)">👍 Makes sense</button><button onclick="fb(0)">👎 Not right</button></div><div id="fr"></div>`);
+if(window.speechSynthesis){speechSynthesis.cancel();speechSynthesis.resume();speak(a)}}
+function fb(ok){const f=$('#fr');if(ok){f.innerHTML='<p>Wonderful, beta. Ask me anything else.</p>';return}f.innerHTML='<p>Oh, sorry about that. What was wrong?</p><div class="fb"><button onclick="fx(0)">Too complicated</button><button onclick="fx(1)">Doesn’t match my pain</button><button onclick="fx(2)">Seems incorrect</button></div>'}
+function fx(i){$('#fr').innerHTML='<p>'+['Let me try again: your body has a doorbell system. Press, ring, and the brain answers. We can also go slowly, one stage at a time.','You are right to say so. This story is general, and your pain may have other causes. I cannot see inside your body, so please show your doctor what you told me.','Thank you for catching that. I am an AI and I can be mistaken. I have flagged this answer for the clinic team to review. Please trust your doctor over me.'][i]+'</p>'}
+function resetAll(){FL=[];cancelAnimationFrame(T.raf);window.speechSynthesis&&speechSynthesis.cancel();Object.assign(S,{name:'',age:'',hist:[],region:'',pt:null,back:false,sens:[],freq:''});$$('.on:not(.scr)').forEach(x=>x.classList.remove('on','sel'));$$('.field').forEach(x=>x.value='');$('#rc').disabled=$('#sc').disabled=$('#fc').disabled=true;chipUp();go('welcome')}
+</script></body></html>
